@@ -1,11 +1,11 @@
-.. _splunk.enterprise.win_splunk_universal_forwarder_info_module:
+.. _splunk.enterprise.splunk_universal_forwarder_linux_info_module:
 
 
-*****************************************************
-splunk.enterprise.win_splunk_universal_forwarder_info
-*****************************************************
+*******************************************************
+splunk.enterprise.splunk_universal_forwarder_linux_info
+*******************************************************
 
-**Gather information about Splunk Universal Forwarder on Windows**
+**Gather information about Splunk Universal Forwarder installations on RHEL systems**
 
 
 Version added: 1.0.0
@@ -17,9 +17,8 @@ Version added: 1.0.0
 
 Synopsis
 --------
-- Retrieves information about the installed Splunk Universal Forwarder.
-- Returns installation state, version, release ID, forward servers, deployment server, and installation directory.
-- Uses ``splunk.exe`` commands authenticated via environment variables to retrieve configuration details.
+- This module gathers information about Splunk Universal Forwarder installations on RHEL 8, 9, and 10 systems.
+- Returns installation state, version, release id, CPU architecture, forward servers, and deployment server configuration.
 
 
 
@@ -38,24 +37,6 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>install_dir</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">path</span>
-                    </div>
-                </td>
-                <td>
-                        <b>Default:</b><br/><div style="color: blue">"C:\\Program Files\\SplunkUniversalForwarder"</div>
-                </td>
-                <td>
-                        <div>Installation directory of Splunk Universal Forwarder.</div>
-                        <div>Used for version detection and running <code>splunk.exe</code> commands.</div>
-                        <div>If Splunk was installed to a non-default directory, you MUST provide the same install_dir value.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>password</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -67,7 +48,7 @@ Parameters
                 </td>
                 <td>
                         <div>Password for the Splunk admin account.</div>
-                        <div>Required to retrieve forward_servers and deployment_server information.</div>
+                        <div>Required to retrieve forward_servers information.</div>
                 </td>
             </tr>
             <tr>
@@ -84,7 +65,7 @@ Parameters
                 </td>
                 <td>
                         <div>Username for the Splunk admin account.</div>
-                        <div>Required to retrieve forward_servers and deployment_server information.</div>
+                        <div>Required to retrieve forward_servers information.</div>
                 </td>
             </tr>
     </table>
@@ -95,9 +76,9 @@ Notes
 -----
 
 .. note::
-   - This module is implemented in PowerShell and is intended for use with Windows hosts.
-   - The module requires valid Splunk credentials to retrieve forward_servers and deployment_server information.
-   - If the Splunk Universal Forwarder is not installed, only ``state`` and ``splunk_home`` will be returned.
+   - This module only works on RHEL 8, 9, and 10 systems.
+   - Splunk Universal Forwarder is expected to be installed in V(/opt/splunkforwarder) with RPM package.
+   - Requires the Splunk service to be running to retrieve forward_servers information.
 
 
 
@@ -106,26 +87,26 @@ Examples
 
 .. code-block:: yaml
 
-    - name: Gather Splunk Universal Forwarder info
-      splunk.enterprise.win_splunk_universal_forwarder_info:
-        username: "SplunkAdmin"
-        password: "Ch@ng3d!"
+    - name: Gather Splunk Universal Forwarder information
+      splunk.enterprise.splunk_universal_forwarder_linux_info:
+        username: admin
+        password: "password"
       register: splunk_info
-    - name: Gather info with custom installation directory
-      splunk.enterprise.win_splunk_universal_forwarder_info:
-        username: "SplunkAdmin"
-        password: "Ch@ng3d!"
-        install_dir: "D:\\Splunk\\UniversalForwarder"
-      register: splunk_info
-    - name: Check if Splunk is installed
-      splunk.enterprise.win_splunk_universal_forwarder_info:
-        username: "SplunkAdmin"
-        password: "Ch@ng3d!"
-      register: splunk_info
-    - name: Show configured forward servers
+
+    - name: Display Splunk information
       ansible.builtin.debug:
-        msg: "Forward servers: {{ splunk_info.forward_servers }}"
-      when: splunk_info.state == 'present'
+        var: splunk_info
+
+    - name: Check if Splunk is installed
+      splunk.enterprise.splunk_universal_forwarder_linux_info:
+        username: admin
+        password: "password"
+      register: splunk_info
+
+    - name: Show message if not installed
+      ansible.builtin.debug:
+        msg: "Splunk Universal Forwarder is not installed"
+      when: splunk_info.state == 'absent'
 
 
 
@@ -137,12 +118,29 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
 
     <table border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="2">Key</th>
+            <th colspan="1">Key</th>
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>cpu</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>when state is present</td>
+                <td>
+                            <div>CPU architecture of the installed package.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">x86_64</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>deployment_server</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
@@ -150,16 +148,16 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                       <span style="color: purple">string</span>
                     </div>
                 </td>
-                <td>when state is present and deployment server is configured</td>
+                <td>when state is present</td>
                 <td>
-                            <div>Configured deployment server URI.</div>
+                            <div>Configured deployment server URI. Empty string if not configured.</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">deployment-server.example.com:8089</div>
                 </td>
             </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>forward_servers</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
@@ -170,14 +168,14 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>when state is present</td>
                 <td>
-                            <div>List of configured forward servers.</div>
+                            <div>List of configured forward servers. Empty list if none configured.</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;splunk-indexer1.example.com:9997&#x27;, &#x27;192.168.60.60:9997&#x27;]</div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;splunk-indexer1.example.com:9997&#x27;, &#x27;192.168.1.100:9997&#x27;]</div>
                 </td>
             </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>release_id</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
@@ -187,78 +185,31 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>when state is present</td>
                 <td>
-                            <div>Release ID corresponding to the installed version.</div>
+                            <div>Release id corresponding to the installed version.</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">c486717c322b</div>
                 </td>
             </tr>
             <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>service</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">dictionary</span>
-                    </div>
-                </td>
-                <td>when state is present</td>
-                <td>
-                            <div>SplunkForwarder service details.</div>
-                    <br/>
-                </td>
-            </tr>
-                                <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>name</b>
+                    <b>rhel_version</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">string</span>
                     </div>
                 </td>
-                <td></td>
+                <td>always</td>
                 <td>
-                            <div>Service name.</div>
+                            <div>Major version of RHEL on the system.</div>
                     <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">9</div>
                 </td>
             </tr>
             <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>start_type</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td></td>
-                <td>
-                            <div>Service startup type (Automatic, Manual, etc.).</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>status</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td></td>
-                <td>
-                            <div>Service status (Running, Stopped, etc.).</div>
-                    <br/>
-                </td>
-            </tr>
-
-            <tr>
-                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>splunk_home</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
@@ -271,11 +222,11 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                             <div>Installation directory of Splunk Universal Forwarder.</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">C:\Program Files\SplunkUniversalForwarder</div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">/opt/splunkforwarder</div>
                 </td>
             </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
@@ -292,7 +243,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
             </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>version</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
@@ -319,4 +270,4 @@ Status
 Authors
 ~~~~~~~
 
-- Ron Gershburg (@rgershbu)
+- Shahar Golshani (@shahargolshani)
